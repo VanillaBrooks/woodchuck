@@ -1,18 +1,24 @@
 use std::io::prelude::*;
 
-pub struct LatexTable<T>
+pub struct LatexTable<'a, T>
 where
     T: Read,
 {
     pub reader: csv::Reader<T>,
+    caption: &'a str,
+    label: &'a str,
 }
-impl<T> LatexTable<T>
+impl<'a, T> LatexTable<'a, T>
 where
     T: Read,
 {
-    pub fn from_reader(reader: T) -> Self {
+    pub fn from_reader(reader: T, caption: &'a str, label: &'a str) -> Self {
         let reader = csv::Reader::from_reader(reader);
-        let s = LatexTable { reader };
+        let s = LatexTable {
+            reader,
+            caption,
+            label,
+        };
         s
     }
 
@@ -63,7 +69,7 @@ where
             String::with_capacity(extras.len() + table.len() + tabular.len() + center.len());
 
         out.push_str(tabular);
-        out.push_str(extras);
+        out.push_str(&extras);
         out.push_str(center);
         out.push_str(table);
         out
@@ -80,8 +86,14 @@ where
         Ok(out)
     }
 
-    fn table_extras(&self) -> &'static str {
-        "\t\t\\caption{Caption Here}\n\t\t\\label{labelhere}\n"
+    fn table_extras(&self) -> String {
+        let mut base = String::with_capacity(20);
+        base.push_str("\t\t\\caption{");
+        base.push_str(self.caption);
+        base.push_str("}\n\t\t\\label{");
+        base.push_str(self.label);
+        base.push_str("}\n");
+        base
     }
 
     pub fn to_writer<W: Write>(&mut self, mut writer: W) -> Result<(), csv::Error> {
