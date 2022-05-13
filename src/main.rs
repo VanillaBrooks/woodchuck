@@ -19,10 +19,12 @@ fn main() {
 
     let caption = matches.value_of("caption").unwrap();
     let label = matches.value_of("label").unwrap();
+    let table_format = matches.value_of("table-format").unwrap();
+    let table_args= matches.value_of("table-args").unwrap();
 
     // open the input file
     let f = std::fs::File::open(input).expect("Could not open the input csv");
-    let mut table = LatexTable::from_reader(f, caption, label);
+    let mut table = LatexTable::from_reader(f, caption, label, table_format, table_args);
 
     // open the tex file to write to
     let mut writer =
@@ -59,5 +61,15 @@ fn make_cli() -> App<'static, 'static> {
             Arg::with_name("label")
                 .long("label")
                 .default_value("Label Here"),
+        )
+        .arg(
+            Arg::with_name("table-format")
+                .long("table-format")
+                .default_value("")
+        )
+        .arg(
+            Arg::with_name("table-args")
+                .long("table-args")
+                .default_value("[H]")
         )
 }

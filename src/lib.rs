@@ -7,17 +7,21 @@ where
     pub reader: csv::Reader<T>,
     caption: &'a str,
     label: &'a str,
+    table_format: &'a str,
+    table_args: &'a str,
 }
 impl<'a, T> LatexTable<'a, T>
 where
     T: Read,
 {
-    pub fn from_reader(reader: T, caption: &'a str, label: &'a str) -> Self {
+    pub fn from_reader(reader: T, caption: &'a str, label: &'a str, table_format: &'a str, table_args: &'a str) -> Self {
         let reader = csv::Reader::from_reader(reader);
         let s = LatexTable {
             reader,
             caption,
             label,
+            table_format,
+            table_args
         };
         s
     }
@@ -43,15 +47,21 @@ where
     }
 
     pub fn make_header(&mut self) -> Result<String, csv::Error> {
-        let table = "\\begin{table}[H]\n";
+        let table = "\\begin{table";
+        let format = self.table_format;
+        let table_ender = "}";
+        let table_args = format!("{}\n", self.table_args);
         let center = "\t\\begin{center}\n";
         let tabular = "\t\t\\begin{tabular} { ";
         let inner = self.column_spacings()?;
-        let outer = " }\n";
+        let outer = " }\n\n\\hline";
 
         let mut out =
             String::with_capacity(center.len() + tabular.len() + inner.len() + outer.len());
         out.push_str(table);
+        out.push_str(format);
+        out.push_str(table_ender);
+        out.push_str(&table_args);
         out.push_str(center);
         out.push_str(tabular);
         out.push_str(&inner);
@@ -61,7 +71,8 @@ where
     }
 
     pub fn make_ender(&self) -> String {
-        let table = "\\end{table}\n";
+        let table = "\\end{table";
+        let table_end = format!("{}}}\n", self.table_format);
         let extras = self.table_extras();
         let tabular = "\t\t\\end{tabular}\n";
         let center = "\t\\end{center}\n";
@@ -72,6 +83,7 @@ where
         out.push_str(&extras);
         out.push_str(center);
         out.push_str(table);
+        out.push_str(&table_end);
         out
     }
 
