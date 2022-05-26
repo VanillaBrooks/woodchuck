@@ -1,4 +1,5 @@
-use clap::{App, Arg};
+use clap::{Arg, Command};
+use woodchuck::Headers;
 use woodchuck::LatexTable;
 
 fn main() {
@@ -20,11 +21,19 @@ fn main() {
     let caption = matches.value_of("caption").unwrap();
     let label = matches.value_of("label").unwrap();
     let table_format = matches.value_of("table-format").unwrap();
-    let table_args= matches.value_of("table-args").unwrap();
+    let table_args = matches.value_of("table-args").unwrap();
+    let multirow_headers: bool = matches.is_present("multi-row-headers");
 
     // open the input file
     let f = std::fs::File::open(input).expect("Could not open the input csv");
-    let mut table = LatexTable::from_reader(f, caption, label, table_format, table_args);
+    let mut table = LatexTable::from_reader(
+        f,
+        caption,
+        label,
+        table_format,
+        table_args,
+        Headers::from_cli_bool(multirow_headers),
+    );
 
     // open the tex file to write to
     let mut writer =
@@ -35,41 +44,50 @@ fn main() {
         .expect("Could not write the result to file");
 }
 
-fn make_cli() -> App<'static, 'static> {
-    App::new("Woodchuck")
-        .version("0.1.0")
+fn make_cli() -> Command<'static> {
+    Command::new("Woodchuck")
+        .version("0.2.0")
         .author("Brooks")
         .about("Convert CSV files to latex tables")
         .arg(
-            Arg::with_name("csv")
+            Arg::new("csv")
                 .value_name("FILE")
                 .help("Input path to csv")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("latex")
+            Arg::new("latex")
                 .value_name("FILE")
                 .help("Path to .tex file to write to")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("caption")
+            Arg::new("caption")
                 .long("caption")
                 .default_value("Caption Here"),
         )
         .arg(
-            Arg::with_name("label")
+            Arg::new("label")
                 .long("label")
                 .default_value("Label Here"),
         )
         .arg(
-            Arg::with_name("table-format")
+            Arg::new("table-format")
                 .long("table-format")
                 .default_value("")
+                .help("value `v` is placed in the header as \\begin{table`v`}. Usually it can be `*` to make the table full-page width")
         )
         .arg(
-            Arg::with_name("table-args")
+            Arg::new("table-args")
                 .long("table-args")
                 .default_value("[H]")
+        )
+        .arg(
+            Arg::new("multi-row-headers")
+                .long("multi-row-headers")
+                .short('m')
+                .help("use organization of first _two_ rows to construct the headers for the table")
+                .takes_value(false)
+                .required(false)
         )
 }
