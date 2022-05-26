@@ -63,9 +63,9 @@ where
         \\begin{{tabular}} {{ {column_spacings} }}
         \\hline
 ",
-            arg = self.table_args.clone(),
-            format = self.table_format.clone(),
-            column_spacings = self.column_spacings()?
+            column_spacings = self.column_spacings()?,
+            arg = self.table_args,
+            format = self.table_format
         );
 
         Ok(table_header)
@@ -145,7 +145,7 @@ fn extended_headers<R: Read>(
     for i in 0..row_1.len() {
         // if this is a blank item then it will be handled elsewhere
         let text = if let Some(col_title) = row_1.get(i) {
-            if col_title == "" {
+            if col_title.is_empty()  {
                 continue;
             } else {
                 col_title
@@ -159,14 +159,14 @@ fn extended_headers<R: Read>(
 
         for j in i + 1..row_1.len() {
             // if the row is empty then make this column take more space
-            if row_1.get(j).map(|x| x == "").unwrap_or(false) {
+            if row_1.get(j).map(|x| x.is_empty()).unwrap_or(false) {
                 num_columns += 1
             } else {
                 break;
             }
         }
 
-        let num_rows = if row_2.get(i).map(|x| x == "").unwrap_or(false) && num_columns == 1 {
+        let num_rows = if row_2.get(i).map(|x| x.is_empty() ).unwrap_or(false) && num_columns == 1 {
             2
         } else {
             1
