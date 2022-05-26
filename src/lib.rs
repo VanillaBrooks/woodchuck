@@ -91,7 +91,7 @@ where
     pub fn make_table(&mut self) -> Result<String, csv::Error> {
         let mut out = String::new();
 
-        for row in self.reader.records().skip(self.headers.row_skip()) {
+        for row in self.reader.records() {
             let row = row?;
             row_sequence(&mut out, &row);
         }
@@ -145,7 +145,7 @@ fn extended_headers<R: Read>(
     for i in 0..row_1.len() {
         // if this is a blank item then it will be handled elsewhere
         let text = if let Some(col_title) = row_1.get(i) {
-            if col_title.is_empty()  {
+            if col_title.is_empty() {
                 continue;
             } else {
                 col_title
@@ -166,7 +166,7 @@ fn extended_headers<R: Read>(
             }
         }
 
-        let num_rows = if row_2.get(i).map(|x| x.is_empty() ).unwrap_or(false) && num_columns == 1 {
+        let num_rows = if row_2.get(i).map(|x| x.is_empty()).unwrap_or(false) && num_columns == 1 {
             2
         } else {
             1
@@ -218,6 +218,8 @@ fn extended_headers<R: Read>(
 
     row_sequence(buffer, &row_2);
 
+    buffer.push_str("\\hline");
+
     Ok(())
 }
 
@@ -243,13 +245,6 @@ impl Headers {
         }
 
         Ok(())
-    }
-
-    fn row_skip(&self) -> usize {
-        match self {
-            Self::Simple => 0,
-            Self::Extended => 1,
-        }
     }
 
     pub fn from_cli_bool(multirow: bool) -> Self {
